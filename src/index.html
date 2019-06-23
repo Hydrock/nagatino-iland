@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+</head>
+<body>
+    <script type="text/javascript" src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
+    <script>
+        var getSceneSettings = function() {
+            this.fov = 75; // field of view
+            this.aspect = window.innerWidth / window.innerHeight;
+            this.near = 0.1;
+            this.far = 50;
+            this.cameraPositionX = 0;
+            this.cameraPositionZ = 6;
+            this.cameraPositionY = 3.4;
+            this.cameraRotationX = -0.3;
+        };
+
+        var sceneSettings = new getSceneSettings();
+
+        var gui = new dat.GUI();
+        var fovController = gui.add(sceneSettings, 'fov', 0, 100);
+        var cameraPositionZController = gui.add(sceneSettings, 'cameraPositionZ', 0, 10);
+        var cameraPositionXController = gui.add(sceneSettings, 'cameraPositionX', -10, 10);
+        var cameraPositionYController = gui.add(sceneSettings, 'cameraPositionY', -10, 10);
+        var cameraRotationXController = gui.add(sceneSettings, 'cameraRotationX', -10, 10);
+
+        fovController.onChange(function(value) { if (camera) { camera.fov = value; } });
+        cameraPositionZController.onChange( function(value) { if (camera) { camera.position.z = value; } } );
+        cameraPositionXController.onChange( function(value) { if (camera) { camera.position.x = value; } } );
+        cameraPositionYController.onChange( function(value) { if (camera) { camera.position.y = value; } } );
+        cameraRotationXController.onChange( function(value) { if (camera) { camera.rotation.x = value; } } );
+
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script>
+        var scene = new THREE.Scene();
+        scene.background = new THREE.Color( 'skyblue' );
+
+        var camera = new THREE.PerspectiveCamera( sceneSettings.fov, sceneSettings.aspect, sceneSettings.fov.near, sceneSettings.far );
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+
+        //
+
+        var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        var material = new THREE.MeshPhongMaterial( { color: 0x44aa88 } );
+        var cube = new THREE.Mesh( geometry, material );
+        scene.add( cube );
+
+        camera.position.z = sceneSettings.cameraPositionZ;
+        camera.position.x = sceneSettings.cameraPositionX;
+        camera.position.y = sceneSettings.cameraPositionY;
+        camera.rotation.x = sceneSettings.cameraRotationX;
+
+        const color = 0xFFFFFF;
+        const intensity = 1;
+        const light = new THREE.DirectionalLight(color, intensity);
+        light.position.set(-1, 2, 4);
+        scene.add(light);
+
+
+        // Добавляем плоскость
+        function getPlane(w, h) {
+            var geo = new THREE.PlaneGeometry(w, h);
+            var material = new THREE.MeshBasicMaterial({
+                // color: 0x00ff00,
+                side: THREE.DoubleSide,
+            });
+            var mesh = new THREE.Mesh(geo, material);
+
+            return mesh;
+        }
+        // /Добавляем плоскость
+        var plane = getPlane(50, 50);
+        scene.add(plane);
+        plane.rotation.x = 1.5;
+        plane.position.x = 0;
+        plane.position.z = 10;
+
+        // textures
+        var planeMaterial = plane.material;
+        planeMaterial.roughness = 1;
+        planeMaterial.roughness = 0.65;
+        planeMaterial.metalness = 0.75;
+
+        function getTexture() {
+            var data = 'https://media-public.canva.com/MADQyJW9vy8/1/thumbnail_large.jpg';
+            return data;
+        }
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load(getTexture());
+        planeMaterial.map = texture;
+        var repetition = 6;
+        var textures = ['map']// we will add 'bumpMap' and 'roughnessMap'
+        textures.forEach((mapName) => {
+            planeMaterial[mapName].wrapS = THREE.RepeatWrapping;
+            planeMaterial[mapName].wrapT = THREE.RepeatWrapping;
+            planeMaterial[mapName].repeat.set(repetition, repetition);
+        });
+
+        //
+        function animate() {
+            requestAnimationFrame( animate );
+            //cube.rotation.x += 0.01;
+            //cube.rotation.y += 0.01;
+
+            if (moving && moving.z) {
+                cube.position.z -= 0.03;
+                camera.position.z = cube.position.z + sceneSettings.cameraPositionZ;
+            }
+
+            if (moving && moving.z2) {
+                cube.position.z += 0.03;
+                camera.position.z = cube.position.z + sceneSettings.cameraPositionZ;
+            }
+
+            if (moving && moving.y) {
+                cube.rotation.y += 0.03;
+                //camera.position.z = cube.position.z + sceneSettings.cameraPositionZ;
+            }
+
+            if (moving && moving.y2) {
+                cube.rotation.y -= 0.03;
+                //camera.position.z = cube.position.z + sceneSettings.cameraPositionZ;
+            }
+
+
+            renderer.render( scene, camera );
+        }
+        animate();
+
+        ///
+
+        var moving = {
+            x: false,
+            x2: false,
+            y: false,
+            y2: false,
+            z: false,
+            z2: false,
+        }
+        document.addEventListener('keydown', function(event){
+            if (event.keyCode === 38) {
+                moving.z = true;
+            } else if (event.keyCode === 40) {
+                moving.z2 = true;
+            } else if (event.keyCode === 37) {
+                moving.y = true;
+            } else if (event.keyCode === 39) {
+                moving.y2 = true;
+            }
+        });
+
+        document.addEventListener('keyup', function(event){
+            //alert(event.keyCode);
+            if (event.keyCode === 38) {
+                moving.z = false;
+            } else if (event.keyCode === 40) {
+                moving.z2 = false;
+            } else if (event.keyCode === 37) {
+                moving.y = false;
+            }else if (event.keyCode === 39) {
+                moving.y2 = false;
+            }
+        });
+
+        
+    </script>
+</body>
+</html>

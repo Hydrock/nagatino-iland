@@ -1,0 +1,22 @@
+{
+  "name": "nagatino-iland",
+  "version": "1.0.0",
+  "description": "Simple 3D Game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hydrock/nagatino-iland.git"
+  },
+  "author": "Hydrock",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hydrock/nagatino-iland/issues"
+  },
+  "homepage": "https://github.com/Hydrock/nagatino-iland#readme",
+  "dependencies": {
+    "dat.gui": "^0.7.6"
+  }
+}
